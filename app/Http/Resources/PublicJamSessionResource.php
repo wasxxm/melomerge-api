@@ -2,8 +2,11 @@
 
 namespace App\Http\Resources;
 
+use App\Models\JamParticipant;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class PublicJamSessionResource extends JsonResource
@@ -20,6 +23,15 @@ class PublicJamSessionResource extends JsonResource
             ? $this->image_uri
             : ( $this->image_uri ? asset('storage/'.$this->image_uri) : null);
 
+        $isParticipant = null;
+        if (Auth::check()) {
+            $userId = Auth::id();
+
+            // Check if the current user is a participant of the jam session using JamParticipant model
+            $isParticipant = JamParticipant::where('jam_session_id', $this->id)
+                ->where('user_id', $userId)
+                ->exists();
+        }
         return [
             'id' => $this->id,
             'name' => $this->name,
@@ -29,6 +41,7 @@ class PublicJamSessionResource extends JsonResource
             'start_time' => $this->start_time,
             'participants_count' => $this->participants_count,
             'image_url' => $imageUrl,
+            'is_participant' => $isParticipant,
             // Add any other fields you need
         ];
     }

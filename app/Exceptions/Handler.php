@@ -2,7 +2,10 @@
 
 namespace App\Exceptions;
 
+use App\Models\JamSession;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Throwable;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -28,6 +31,25 @@ class Handler extends ExceptionHandler
                 'message' => $exception->getMessage(),
                 'errors' => $exception->errors(),
             ], $exception->status);
+        }
+
+        // Check if the exception is an instance of ModelNotFoundException
+        if ($exception instanceof ModelNotFoundException) {
+            // Optionally, add more specific checks for the model type
+            if ($exception->getModel() === JamSession::class) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Jam Session not found',
+                    'errors' => ['not_found' => ['The specified Jam Session does not exist.']]
+                ], 404);
+            }
+
+            // Generic response for other models
+            return response()->json([
+                'success' => false,
+                'message' => 'Resource not found',
+                'errors' => ['not_found' => ['The requested resource does not exist.']]
+            ], 404);
         }
 
         return parent::render($request, $exception);
