@@ -37,8 +37,8 @@ jobs:
         run: composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
       - name: Clear the old cache
         run: php artisan clear-compiled
-      - name: Config cache
-        run: php artisan config:cache
+      - name: Config cache clear
+        run: php artisan config:clear
       - name: Run Storage Link Command
         run: php artisan storage:link
       - name: Run database migrations
