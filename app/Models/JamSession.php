@@ -32,7 +32,7 @@ class JamSession extends Model
 
     public function participants(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'jam_participants', 'jam_session_id', 'user_id')->withPivot('role');
+        return $this->belongsToMany(User::class, 'jam_participants', 'jam_session_id', 'user_id')->withPivot('role_id');
     }
 
     public function genre(): BelongsTo

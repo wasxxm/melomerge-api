@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CreateJamSessionRequest;
 use App\Http\Requests\JoinJamSessionRequest;
+use App\Http\Resources\JamSessionDetailsResource;
 use App\Http\Resources\PublicJamSessionResource;
 use App\Models\JamSession;
 use Illuminate\Database\QueryException;
@@ -45,8 +46,8 @@ class JamSessionController extends Controller
             }
 
             // Filter by location if provided
-            if ($request->has('location')) {
-                $query->where('venue', 'like', '%' . $request->location . '%');
+            if ($request->has('venue')) {
+                $query->where('venue', 'like', '%' . $request->venue . '%');
             }
 
             // Filter by organizer if provided
@@ -74,6 +75,18 @@ class JamSessionController extends Controller
             if ($request->has('role')) {
                 $query->whereHas('participants', function ($query) use ($request) {
                     $query->where('name', 'like', '%' . $request->role . '%');
+                });
+            }
+
+            // show only the jams created by this user
+            if ($request->has('created-jams') && $request->get('created-jams')) {
+                $query->where('organizer_id', $request->user()->id);
+            }
+
+            // show only the jams joined by this user
+            if ($request->has('joined-jams') && $request->get('joined-jams')) {
+                $query->whereHas('participants', function ($query) use ($request) {
+                    $query->where('user_id', $request->user()->id);
                 });
             }
 
@@ -153,11 +166,13 @@ class JamSessionController extends Controller
      * Display the specified resource.
      *
      * @param JamSession $jamSession
-     * @return PublicJamSessionResource
+     * @return JamSessionDetailsResource
      */
-    public function show(JamSession $jamSession): PublicJamSessionResource
+    public function show(JamSession $jamSession): JamSessionDetailsResource
     {
-        return new PublicJamSessionResource($jamSession);
+        // also load the participants
+        $jamSession->load('participants');
+        return new JamSessionDetailsResource($jamSession);
     }
 
     /**

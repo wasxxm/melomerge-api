@@ -45,10 +45,11 @@ Route::get('/jam-sessions/public', [JamSessionController::class, 'index']);
      // jam sessions
      Route::get('/jam-sessions', [JamSessionController::class, 'index']);
      Route::post('/jam-sessions', [JamSessionController::class, 'store']);
+     Route::get('/jam-sessions/{jam_session}', [JamSessionController::class, 'show']);
      Route::post('/jam-sessions/{jam_session}/join', [JamSessionController::class, 'join']);
      Route::post('/jam-sessions/{jam_session}/leave', [JamSessionController::class, 'leave']);
+
      Route::middleware(['checkJamSessionOwner'])->group(function () {
-         Route::get('/jam-sessions/{jam_session}', [JamSessionController::class, 'show']);
          Route::put('/jam-sessions/{jam_session}', [JamSessionController::class, 'update']);
          Route::delete('/jam-sessions/{jam_session}', [JamSessionController::class, 'destroy']);
      });
