@@ -42,6 +42,7 @@ class PublicJamSessionResource extends JsonResource
             'participants_count' => $this->participants_count,
             'image_url' => $imageUrl,
             'is_participant' => $isParticipant,
+            'distance' => $this->distance,
             // Add any other fields you need
         ];
     }

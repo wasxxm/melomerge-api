@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -18,6 +19,13 @@ return new class extends Migration
             $table->text('description');
             $table->dateTime('start_time');
             $table->string('venue');
+
+            // Create 'location' column as POINT
+            $table->point('location')->default(DB::raw("ST_GeomFromText('POINT(0 0)')"));
+
+            // Create spatial index on 'location' column
+            $table->spatialIndex('location');
+
             $table->foreignId('genre_id')->constrained('genres');
             $table->boolean('is_public')->default(true);
             $table->string('image_uri')->nullable();

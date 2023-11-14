@@ -5,7 +5,9 @@ namespace Database\Factories;
 use App\Models\Genre;
 use App\Models\JamSession;
 use App\Models\User;
+use App\Utilities\Geocoder;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Facades\DB;
 
 /**
  * @extends Factory<JamSession>
@@ -88,6 +90,39 @@ class JamSessionFactory extends Factory
             'Vibrato Valley, a vibrant venue for those who vibrate with the pulse of music.',
         ];
 
+        $venues = [
+            'Main St, Springfield, IL 62701',
+            'Elm St, New York, NY 10001',
+            'Oak St, Los Angeles, CA 90001',
+            'Pine St, Chicago, IL 60601',
+            'Maple St, Houston, TX 77001',
+            'Cedar St, San Francisco, CA 94101',
+            'Birch St, Miami, FL 33101',
+            'Redwood St, Dallas, TX 75201',
+            'Willow St, Phoenix, AZ 85001',
+            'Cherry St, Philadelphia, PA 19101',
+            'Walnut St, Denver, CO 80201',
+            'Spruce St, Seattle, WA 98101',
+            'Laurel St, Atlanta, GA 30301',
+            'Sycamore St, Boston, MA 02101',
+            'Cedar St, San Diego, CA 92101',
+            'Pine St, Las Vegas, NV 89101',
+            'Oak St, Austin, TX 78701',
+            'Maple St, Portland, OR 97201',
+            'Elm St, Baltimore, MD 21201',
+            'Birch St, Nashville, TN 37201',
+            'Redwood St, Detroit, MI 48201',
+            'Willow St, Minneapolis, MN 55401',
+            'Cherry St, Orlando, FL 32801',
+            'Walnut St, Charlotte, NC 28201',
+            'Spruce St, San Antonio, TX 78201',
+            'Sycamore St, Raleigh, NC 27601',
+            'Cedar St, Indianapolis, IN 46201',
+            'Pine St, Columbus, OH 43201',
+            'Oak St, Kansas City, MO 64101',
+            'Maple St, New Orleans, LA 70101',
+        ];
+
 
         // Ensure we don't run out of unique names/descriptions
         if (empty($names) || empty($descriptions)) {
@@ -104,12 +139,17 @@ class JamSessionFactory extends Factory
         unset($names[$nameKey]);
         unset($descriptions[$descriptionKey]);
 
+        $randVenue = $venues[array_rand($venues)];
+
+        $coordinates = Geocoder::geocodeAddress($randVenue);
+
         return [
             'organizer_id' => User::inRandomOrder()->first()->id, // Select a random user as the organizer
             'name' => $name,
             'description' => $description,
             'start_time' => $this->faker->dateTimeBetween('+1 week', '+1 month'),
-            'venue' => $this->faker->address,
+            'venue' => $randVenue,
+            'location' => DB::raw("ST_GeomFromText('POINT({$coordinates['lng']} {$coordinates['lat']})')"),
             'genre_id' => Genre::inRandomOrder()->first()->id,
             'is_public' => $this->faker->boolean,
             'image_uri' => 'https://picsum.photos/seed/' . $this->faker->word . '/720/400',

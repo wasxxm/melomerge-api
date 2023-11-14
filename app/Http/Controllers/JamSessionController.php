@@ -8,10 +8,12 @@ use App\Http\Requests\JoinJamSessionRequest;
 use App\Http\Resources\JamSessionDetailsResource;
 use App\Http\Resources\PublicJamSessionResource;
 use App\Models\JamSession;
+use App\Utilities\Geocoder;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\DB;
 
 class JamSessionController extends Controller
 {
@@ -30,49 +32,58 @@ class JamSessionController extends Controller
             // Assuming 'is_public' is a boolean field in your jam_sessions table
             $query->where('is_public', true);
 
-            // Filter by date if provided
-            if ($request->has('start_date')) {
-//                $query->whereDate('start_time', '<=', $request->date);
+            // Filter by date if provided and not empty
+            if ($request->has('start_date') && $request->start_date){
+                $query->whereDate('start_time', '>=', $request->start_date);
             }
 
             // Filter by genre_id if provided
-            if ($request->has('genre_id')) {
+            if ($request->has('genre_id') && $request->genre_id) {
                 $query->where('genre_id', $request->genre_id);
             }
 
             // Filter by name if provided
-            if ($request->has('name')) {
+            if ($request->has('name') && $request->name) {
                 $query->where('name', 'like', '%' . $request->name . '%');
             }
 
             // Filter by location if provided
-            if ($request->has('venue')) {
-                $query->where('venue', 'like', '%' . $request->venue . '%');
+            if ($request->has('venue') && $request->venue) {
+                $coordinates = Geocoder::geocodeAddress($request->venue);
+
+                if ($coordinates) {
+                    $latitude = $coordinates['lat'];
+                    $longitude = $coordinates['lng'];
+                    $maxDistance = 10; // Maximum distance in kilometers
+
+                    // Use the scope for nearby jams
+                    $query->nearby($latitude, $longitude, $maxDistance);
+                }
             }
 
             // Filter by organizer if provided
-            if ($request->has('organizer')) {
+            if ($request->has('organizer') && $request->organizer) {
                 $query->whereHas('organizer', function ($query) use ($request) {
                     $query->where('name', 'like', '%' . $request->organizer . '%');
                 });
             }
 
             // Filter by participant if provided
-            if ($request->has('participant')) {
+            if ($request->has('participant') && $request->participant) {
                 $query->whereHas('participants', function ($query) use ($request) {
                     $query->where('name', 'like', '%' . $request->participant . '%');
                 });
             }
 
             // Filter by instrument if provided
-            if ($request->has('instrument')) {
+            if ($request->has('instrument') && $request->instrument) {
                 $query->whereHas('participants', function ($query) use ($request) {
                     $query->where('name', 'like', '%' . $request->instrument . '%');
                 });
             }
 
             // Filter by role if provided
-            if ($request->has('role')) {
+            if ($request->has('role') && $request->role) {
                 $query->whereHas('participants', function ($query) use ($request) {
                     $query->where('name', 'like', '%' . $request->role . '%');
                 });
@@ -129,6 +140,12 @@ class JamSessionController extends Controller
             $jamSession->is_public = !$request->is_private;
             $jamSession->description = $request->description;
             $jamSession->venue = $request->location;
+
+            $coordinates = Geocoder::geocodeAddress($request->location);
+            if ($coordinates) {
+                $jamSession->location = DB::raw("ST_GeomFromText('POINT({$coordinates['lng']} {$coordinates['lat']})')");
+            }
+
 
             // save the image
             if ($request->hasFile('image')) {
