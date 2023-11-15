@@ -15,16 +15,23 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    services:
-      mysql:
-        image: mysql:latest
-        env:
-          MYSQL_ROOT_PASSWORD: GCWazeem@1988
-          MYSQL_DATABASE: melomerge_test
-        ports:
-          - 3306:3306
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=10
+#    services:
+#      mysql:
+#        image: mysql:latest
+#        env:
+#          MYSQL_ROOT_PASSWORD: GCWazeem@1988
+#          MYSQL_DATABASE: melomerge_test
+#        ports:
+#          - 3306:3306
+#        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=10
     steps:
+      - name: Shutdown Ubuntu MySQL
+        run: sudo service mysql stop
+      - uses: mirromutth/mysql-action@v1.1
+        with:
+          mysql version: '8.0'
+          mysql database: 'melomerge_test'
+          mysql root password: GCWazeem@1988
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
