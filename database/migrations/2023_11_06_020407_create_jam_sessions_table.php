@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('venue');
 
             // Create 'location' column as POINT
-            $table->point('location')->default(DB::raw("ST_GeomFromText('POINT(0 0)')"));
+            $table->point('location');//->default(DB::raw("ST_GeomFromText('POINT(0 0)')"));
 
             // Create spatial index on 'location' column
             $table->spatialIndex('location');
