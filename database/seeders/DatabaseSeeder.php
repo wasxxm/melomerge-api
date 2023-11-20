@@ -19,6 +19,8 @@ class DatabaseSeeder extends Seeder
             RolesTableSeeder::class,
             InstrumentsTableSeeder::class,
             GenresTableSeeder::class,
+            JamTypeSeeder::class,
+            SkillLevelSeeder::class,
         ]);
 
         // Create 100 users

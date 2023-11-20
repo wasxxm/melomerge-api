@@ -137,6 +137,7 @@ class JamSessionController extends Controller
             $jamSession->start_time = $request->start_date;
 //        $jamSession->end_date = $request->end_date;
             $jamSession->genre_id = $request->genre_id;
+            $jamSession->jam_type_id = $request->jam_type_id;
             $jamSession->is_public = !$request->is_private;
             $jamSession->description = $request->description;
             $jamSession->venue = $request->location;

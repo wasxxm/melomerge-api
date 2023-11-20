@@ -38,6 +38,7 @@ class JamSessionDetailsResource extends JsonResource
             'description' => $this->description,
             'venue' => $this->venue,
             'genre' => $this->genre?->name,
+            'jam_type' => $this->jamType?->name,
             'start_time' => $this->start_time,
             'participants_count' => $this->participants_count,
             'image_url' => $imageUrl,

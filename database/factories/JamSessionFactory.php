@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\Genre;
 use App\Models\JamSession;
+use App\Models\JamType;
 use App\Models\User;
 use App\Utilities\Geocoder;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -151,6 +152,7 @@ class JamSessionFactory extends Factory
             'venue' => $randVenue,
             'location' => DB::raw("ST_GeomFromText('POINT({$coordinates['lng']} {$coordinates['lat']})')"),
             'genre_id' => Genre::inRandomOrder()->first()->id,
+            'jam_type_id' => JamType::inRandomOrder()->first()->id,
             'is_public' => $this->faker->boolean,
             'image_uri' => 'https://picsum.photos/seed/' . $this->faker->word . '/720/400',
             // Add other fields as necessary

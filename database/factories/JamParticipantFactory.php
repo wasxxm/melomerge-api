@@ -6,6 +6,7 @@ use App\Models\Instrument;
 use App\Models\JamParticipant;
 use App\Models\JamSession;
 use App\Models\Role;
+use App\Models\SkillLevel;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -26,6 +27,8 @@ class JamParticipantFactory extends Factory
             'user_id' => User::inRandomOrder()->first()->id, // Select a random user
             'role_id' => Role::inRandomOrder()->first()->id,
             'instrument_id' => Instrument::inRandomOrder()->first()->id,
+            'message' => $this->faker->sentence(10),
+            'skill_level_id' => SkillLevel::inRandomOrder()->first()->id,
             // Add other fields as necessary
         ];
     }

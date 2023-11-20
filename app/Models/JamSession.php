@@ -21,6 +21,7 @@ class JamSession extends Model
         'venue',
         'location',
         'genre_id',
+        'jam_type_id',
         'is_public',
         'image_uri',
     ];
@@ -40,6 +41,11 @@ class JamSession extends Model
     public function genre(): BelongsTo
     {
         return $this->belongsTo(Genre::class);
+    }
+
+    public function jamType(): BelongsTo
+    {
+        return $this->belongsTo(JamType::class);
     }
 
     // get only the count of participants

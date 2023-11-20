@@ -16,7 +16,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('organizer_id');
             $table->string('name', 100);
-            $table->text('description');
+            $table->text('description')->nullable();
             $table->dateTime('start_time');
             $table->string('venue');
 
@@ -27,6 +27,8 @@ return new class extends Migration
             $table->spatialIndex('location');
 
             $table->foreignId('genre_id')->constrained('genres');
+            $table->foreignId('jam_type_id')->constrained('jam_types');
+
             $table->boolean('is_public')->default(true);
             $table->string('image_uri')->nullable();
             $table->timestamps();

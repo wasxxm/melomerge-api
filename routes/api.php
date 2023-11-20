@@ -44,6 +44,7 @@ Route::get('/jam-sessions/public', [JamSessionController::class, 'index']);
 
      // jam sessions
      Route::get('/jam-sessions', [JamSessionController::class, 'index']);
+     Route::get('/jam-sessions/get-create-data', [CommonController::class, 'get_jam_session_create_data']);
      Route::post('/jam-sessions', [JamSessionController::class, 'store']);
      Route::get('/jam-sessions/{jam_session}', [JamSessionController::class, 'show']);
      Route::post('/jam-sessions/{jam_session}/join', [JamSessionController::class, 'join']);
