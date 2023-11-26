@@ -25,7 +25,7 @@ class JamSessionController extends Controller
      * @param Request $request
      * @return AnonymousResourceCollection|JsonResponse
      */
-    public function index(Request $request): AnonymousResourceCollection | JsonResponse
+    public function index(Request $request): AnonymousResourceCollection|JsonResponse
     {
         try {
             // Start a query builder for JamSession
@@ -35,7 +35,7 @@ class JamSessionController extends Controller
             $query->where('is_public', true);
 
             // Filter by date if provided and not empty
-            if ($request->has('start_date') && $request->start_date){
+            if ($request->has('start_date') && $request->start_date) {
                 $query->whereDate('start_time', '>=', $request->start_date);
             }
 
@@ -65,16 +65,16 @@ class JamSessionController extends Controller
 
             // filter by location if provided
             if ($request->has('location') && $request->location) {
-                    $location = explode(',', $request->location);
-                    $latitude = $location[0];
-                    $longitude = $location[1];
+                $location = explode(',', $request->location);
+                $latitude = $location[0];
+                $longitude = $location[1];
 
-                    if ((!$latitude > 90 && !$latitude < -90 && !$longitude > 180 && !$longitude < -180) && ($latitude != 0 && $longitude != 0)) {
-                        $maxDistance = 10; // Maximum distance in kilometers
+                if ($latitude != 0 && $longitude != 0) {
+                    $maxDistance = 10; // Maximum distance in kilometers
 
-                        // Use the scope for nearby jams
-                        $query->nearby($latitude, $longitude, $maxDistance);
-                    }
+                    // Use the scope for nearby jams
+                    $query->nearby($latitude, $longitude, $maxDistance);
+                }
             }
 
             // Filter by organizer if provided
@@ -142,7 +142,8 @@ class JamSessionController extends Controller
      * @param CreateJamSessionRequest $request
      * @return PublicJamSessionResource|JsonResponse
      */
-    public function store(CreateJamSessionRequest $request): PublicJamSessionResource | JsonResponse {
+    public function store(CreateJamSessionRequest $request): PublicJamSessionResource|JsonResponse
+    {
         try {
             // Create a new JamSession
             $jamSession = new JamSession();
@@ -186,8 +187,7 @@ class JamSessionController extends Controller
 
             // Return the resource
             return new PublicJamSessionResource($jamSession);
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Error creating the jam session',
@@ -217,7 +217,7 @@ class JamSessionController extends Controller
      * @param JamSession $jamSession
      * @return PublicJamSessionResource|JsonResponse
      */
-    public function update(CreateJamSessionRequest $request, JamSession $jamSession): PublicJamSessionResource | JsonResponse
+    public function update(CreateJamSessionRequest $request, JamSession $jamSession): PublicJamSessionResource|JsonResponse
     {
         try {
             // Set the attributes
@@ -250,8 +250,7 @@ class JamSessionController extends Controller
 
             // Return the resource
             return new PublicJamSessionResource($jamSession);
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Error updating the jam session',
@@ -339,7 +338,7 @@ class JamSessionController extends Controller
                 }
 
                 // Other database related errors
-                throw new GeneralException('Database error occurred', 'A database error occurred. Please try again.'.$e->getMessage());
+                throw new GeneralException('Database error occurred', 'A database error occurred. Please try again.' . $e->getMessage());
             }
 
             throw new GeneralException('Error joining the jam session', $e->getMessage());
