@@ -21,7 +21,7 @@ class JamSessionDetailsResource extends JsonResource
         // Check if the image_uri contains 'https://' at the beginning
         $imageUrl = Str::startsWith($this->image_uri, 'https://')
             ? $this->image_uri
-            : ( $this->image_uri ? asset('storage/'.$this->image_uri) : null);
+            : ($this->image_uri ? asset('storage/' . $this->image_uri) : null);
 
         $isParticipant = null;
         if (Auth::check()) {
@@ -32,6 +32,20 @@ class JamSessionDetailsResource extends JsonResource
                 ->where('user_id', $userId)
                 ->exists();
         }
+
+        $participants = $this->participants->map(function ($participant) {
+            // Assuming the User model has the necessary relationships or attributes
+            $user = $participant->user;
+            return [
+                'user_id' => $user->id,
+                'name' => $user->name,
+                // Include other user attributes you need
+                'role' => $participant->role?->name, // Access role from the user
+                'instrument' => $participant->instrument?->name, // Access instrument from the user
+                'skill_level' => $participant->skill_level?->name, // Access skill level from the user
+            ];
+        });
+
         return [
             'id' => $this->id,
             'name' => $this->name,
@@ -44,7 +58,7 @@ class JamSessionDetailsResource extends JsonResource
             'image_url' => $imageUrl,
             'is_participant' => $isParticipant,
             'organizer' => $this->organizer,
-            'participants' => $this->participants,
+            'participants' => $participants,
             // Add any other fields you need
         ];
     }

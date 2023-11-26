@@ -33,6 +33,14 @@ class JoinJamSessionRequest extends FormRequest
                     Rule::exists('instruments', 'id')
                 ),
             ],
+            'skill_level_id' => [
+                'sometimes',
+                'required',
+                Rule::when(
+                    $this->input('instrument_id') > 0,
+                    Rule::exists('skill_levels', 'id')
+                ),
+            ],
             'message' => 'nullable|string|max:500',
         ];
     }

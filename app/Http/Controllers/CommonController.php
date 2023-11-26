@@ -64,4 +64,28 @@ class CommonController extends Controller
             ], 500);
         }
     }
+
+    public function get_join_jam_data(): JsonResponse
+    {
+        try {
+            $roles = Role::all();
+            $instruments = Instrument::all();
+            $skill_levels = SkillLevel::all();
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'roles' => $roles,
+                    'instruments' => $instruments,
+                    'skill_levels' => $skill_levels,
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error retrieving data for joining a jam session',
+                'errors' => ['server' => [$e->getMessage()]]
+            ], 500);
+        }
+    }
 }

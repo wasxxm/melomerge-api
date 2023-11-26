@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -33,10 +34,12 @@ class JamSession extends Model
         return $this->belongsTo(User::class, 'organizer_id');
     }
 
-    public function participants(): BelongsToMany
+    public function participants(): HasMany
     {
-        return $this->belongsToMany(User::class, 'jam_participants', 'jam_session_id', 'user_id')->withPivot('role_id');
+        return $this->hasMany(JamParticipant::class, 'jam_session_id');
     }
+
+
 
     public function genre(): BelongsTo
     {

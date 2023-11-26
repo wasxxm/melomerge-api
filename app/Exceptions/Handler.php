@@ -23,20 +23,36 @@ class Handler extends ExceptionHandler
         'password_confirmation',
     ];
 
-    public function render($request, Throwable $exception)
+    public function render($request, Throwable $e)
     {
-        if ($exception instanceof ValidationException) {
+        if ($e instanceof ValidationException) {
             return response()->json([
                 'success' => false,
-                'message' => $exception->getMessage(),
-                'errors' => $exception->errors(),
-            ], $exception->status);
+                'message' => $e->getMessage(),
+                'errors' => $e->errors(),
+            ], $e->status);
+        }
+
+        if ($e instanceof DuplicateEntryException) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getErrorMessage(),
+                'errors' => ['duplicate_entry' => [$e->getErrorDetails()]]
+            ], 400);
+        }
+
+        if ($e instanceof GeneralException) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getErrorMessage(),
+                'errors' => ['general_error' => [$e->getErrorDetails()]]
+            ], 500);
         }
 
         // Check if the exception is an instance of ModelNotFoundException
-        if ($exception instanceof ModelNotFoundException) {
+        if ($e instanceof ModelNotFoundException) {
             // Optionally, add more specific checks for the model type
-            if ($exception->getModel() === JamSession::class) {
+            if ($e->getModel() === JamSession::class) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Jam Session not found',
@@ -52,7 +68,7 @@ class Handler extends ExceptionHandler
             ], 404);
         }
 
-        return parent::render($request, $exception);
+        return parent::render($request, $e);
     }
 
     /**

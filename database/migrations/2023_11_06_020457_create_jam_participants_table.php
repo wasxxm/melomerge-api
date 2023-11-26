@@ -16,9 +16,10 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('jam_session_id');
             $table->foreignId('role_id')->constrained('roles');
-            $table->foreignId('skill_level_id')->constrained('skill_levels');
             $table->text('message')->nullable();
             $table->unsignedBigInteger('instrument_id')->nullable();
+            $table->unsignedBigInteger('skill_level_id')->nullable();
+
             $table->timestamps();
 
             // Add a unique index for `jam_session_id` and `user_id` columns
@@ -29,6 +30,11 @@ return new class extends Migration
 
             $table->foreign('instrument_id')
                 ->references('id')->on('instruments')
+                ->onDelete('set null')
+                ->onUpdate('cascade');
+
+            $table->foreign('skill_level_id')
+                ->references('id')->on('skill_levels')
                 ->onDelete('set null')
                 ->onUpdate('cascade');
         });

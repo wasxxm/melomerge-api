@@ -32,6 +32,26 @@ class PublicJamSessionResource extends JsonResource
                 ->where('user_id', $userId)
                 ->exists();
         }
+
+        $distance = $this->distance;
+        if ($distance) {
+            $distance_miles = $distance * 0.621371; // Convert kilometers to miles
+
+            if ($distance_miles >= 1) {
+                $distance_miles = round($distance_miles, 2); // Round to 2 decimal places for miles
+                // Check for singular or plural form of "mile"
+                $distance_text = $distance_miles == 1 ? "mile away" : "miles away";
+                $distance = $distance_miles . " " . $distance_text;
+            } else {
+                $distance_feet = $distance * 3280.84; // Convert kilometers to feet
+                $distance_feet = round($distance_feet); // Round to nearest foot
+                // Check for singular or plural form of "foot"
+                $distance_text = $distance_feet == 1 ? "foot away" : "feet away";
+                $distance = $distance_feet . " " . $distance_text;
+            }
+        }
+
+
         return [
             'id' => $this->id,
             'name' => $this->name,
@@ -43,7 +63,7 @@ class PublicJamSessionResource extends JsonResource
             'participants_count' => $this->participants_count,
             'image_url' => $imageUrl,
             'is_participant' => $isParticipant,
-            'distance' => $this->distance,
+            'distance' => $distance,
             // Add any other fields you need
         ];
     }

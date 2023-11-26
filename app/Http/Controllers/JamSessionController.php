@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\DuplicateEntryException;
+use App\Exceptions\GeneralException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CreateJamSessionRequest;
 use App\Http\Requests\JoinJamSessionRequest;
@@ -47,7 +49,7 @@ class JamSessionController extends Controller
                 $query->where('name', 'like', '%' . $request->name . '%');
             }
 
-            // Filter by location if provided
+            // Filter by venue if provided
             if ($request->has('venue') && $request->venue) {
                 $coordinates = Geocoder::geocodeAddress($request->venue);
 
@@ -59,6 +61,20 @@ class JamSessionController extends Controller
                     // Use the scope for nearby jams
                     $query->nearby($latitude, $longitude, $maxDistance);
                 }
+            }
+
+            // filter by location if provided
+            if ($request->has('location') && $request->location) {
+                    $location = explode(',', $request->location);
+                    $latitude = $location[0];
+                    $longitude = $location[1];
+
+                    if ((!$latitude > 90 && !$latitude < -90 && !$longitude > 180 && !$longitude < -180) && ($latitude != 0 && $longitude != 0)) {
+                        $maxDistance = 10; // Maximum distance in kilometers
+
+                        // Use the scope for nearby jams
+                        $query->nearby($latitude, $longitude, $maxDistance);
+                    }
             }
 
             // Filter by organizer if provided
@@ -188,10 +204,11 @@ class JamSessionController extends Controller
      */
     public function show(JamSession $jamSession): JamSessionDetailsResource
     {
-        // also load the participants
-        $jamSession->load('participants');
+        $jamSession->load('participants.user', 'participants.role', 'participants.instrument', 'participants.skill_level');
+
         return new JamSessionDetailsResource($jamSession);
     }
+
 
     /**
      * Update the specified resource in storage.
@@ -278,19 +295,23 @@ class JamSessionController extends Controller
      *
      * @param JamSession $jamSession
      * @return JsonResponse
+     * @throws DuplicateEntryException
+     * @throws GeneralException
      */
     public function join(JamSession $jamSession, JoinJamSessionRequest $request): JsonResponse
     {
         try {
             $userId = auth()->user()->id;
             $roleId = $request->validated('role_id');  // Retrieve role_id from the request
+            $skillLevelId = $request->validated('skill_level_id'); // Retrieve skill_level_id from the request
             $message = $request->validated('message'); // Retrieve message from the request
             $instrumentId = $request->validated('instrument_id');
 
             // Add the authenticated user to the jam session with additional data
             $jamSession->participants()->attach($userId, [
                 'role_id' => $roleId,
-                'instrument_id' => $instrumentId == 0 ? null : $instrumentId,
+                'instrument_id' => $instrumentId <= 0 ? null : $instrumentId,
+                'skill_level_id' => $skillLevelId <= 0 ? null : $skillLevelId,
                 'message' => $message
             ]);
 
@@ -312,17 +333,16 @@ class JamSessionController extends Controller
 
         } catch (\Exception $e) {
             if ($e instanceof QueryException) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Error joining the jam session',
-                    'errors' => ['join' => ['You are already a participant.']]
-                ], 500);
+                // Check for a known substring in the exception message that indicates a duplicate entry
+                if (str_contains($e->getMessage(), 'Duplicate entry')) {
+                    throw new DuplicateEntryException('You are already a participant');
+                }
+
+                // Other database related errors
+                throw new GeneralException('Database error occurred', 'A database error occurred. Please try again.'.$e->getMessage());
             }
-            return response()->json([
-                'success' => false,
-                'message' => 'Error joining the jam session',
-                'errors' => ['server' => [$e->getMessage()]]
-            ], 500);
+
+            throw new GeneralException('Error joining the jam session', $e->getMessage());
         }
     }
 
