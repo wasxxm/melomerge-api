@@ -70,7 +70,7 @@ class JamSessionController extends Controller
                 $longitude = $location[1];
 
                 if ($latitude != 0 && $longitude != 0) {
-                    $maxDistance = 10; // Maximum distance in kilometers
+                    $maxDistance = 10000; // Maximum distance in kilometers
 
                     // Use the scope for nearby jams
                     $query->nearby($latitude, $longitude, $maxDistance);
