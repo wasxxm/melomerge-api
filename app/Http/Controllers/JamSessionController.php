@@ -9,6 +9,7 @@ use App\Http\Requests\CreateJamSessionRequest;
 use App\Http\Requests\JoinJamSessionRequest;
 use App\Http\Resources\JamSessionDetailsResource;
 use App\Http\Resources\PublicJamSessionResource;
+use App\Models\JamParticipant;
 use App\Models\JamSession;
 use App\Utilities\Geocoder;
 use Illuminate\Database\QueryException;
@@ -34,6 +35,10 @@ class JamSessionController extends Controller
             // Assuming 'is_public' is a boolean field in your jam_sessions table
             $query->where('is_public', true);
 
+            $radius = $request->has('radius') ? $request->get('radius') : 15;
+            // convert $radius from miles to kilometers
+            $radius = $radius * 1.60934;
+
             // Filter by date if provided and not empty
             if ($request->has('start_date') && $request->start_date) {
                 $query->whereDate('start_time', '>=', $request->start_date);
@@ -49,33 +54,19 @@ class JamSessionController extends Controller
                 $query->where('name', 'like', '%' . $request->name . '%');
             }
 
-            // Filter by venue if provided
-            if ($request->has('venue') && $request->venue) {
-                $coordinates = Geocoder::geocodeAddress($request->venue);
-
-                if ($coordinates) {
-                    $latitude = $coordinates['lat'];
-                    $longitude = $coordinates['lng'];
-                    $maxDistance = 10; // Maximum distance in kilometers
-
-                    // Use the scope for nearby jams
-                    $query->nearby($latitude, $longitude, $maxDistance);
-                }
-            }
-
-            // filter by location if provided
-            if ($request->has('location') && $request->location) {
-                $location = explode(',', $request->location);
-                $latitude = $location[0];
-                $longitude = $location[1];
-
-                if ($latitude != 0 && $longitude != 0) {
-                    $maxDistance = 10000; // Maximum distance in kilometers
-
-                    // Use the scope for nearby jams
-                    $query->nearby($latitude, $longitude, $maxDistance);
-                }
-            }
+//            // filter by location if provided
+//            if ($request->has('location') && $request->location) {
+//                $location = explode(',', $request->location);
+//                $latitude = $location[0];
+//                $longitude = $location[1];
+//
+//                if ($latitude != 0 && $longitude != 0) {
+//                    $maxDistance = 10000; // Maximum distance in kilometers
+//
+//                    // Use the scope for nearby jams
+//                    $query->nearby($latitude, $longitude, $maxDistance);
+//                }
+//            }
 
             // Filter by organizer if provided
             if ($request->has('organizer') && $request->organizer) {
@@ -117,12 +108,26 @@ class JamSessionController extends Controller
                 });
             }
 
+            // Filter by venue if provided
+            if ($request->has('venue') && $request->venue) {
+                $coordinates = Geocoder::geocodeAddress($request->venue);
 
-//            $query->orderBy('start_time', 'desc');
-            $query->orderBy('created_at', 'desc');
+                if ($coordinates) {
+                    $latitude = $coordinates['lat'];
+                    $longitude = $coordinates['lng'];
+
+                    // Use the scope for nearby jams
+                    $query->nearby($latitude, $longitude, $radius);
+                    $query->orderBy('distance', 'asc');
+                }
+            } else {
+                // Sort by start_time if no venue is provided
+                $query->orderBy('created_at', 'desc');
+            }
+
 
             // Add pagination
-            $jamSessions = $query->paginate(15);
+            $jamSessions = $query->paginate(8);
 
             // Wrap the collection of jam sessions with the resource
             return PublicJamSessionResource::collection($jamSessions);
@@ -307,19 +312,16 @@ class JamSessionController extends Controller
             $instrumentId = $request->validated('instrument_id');
 
             // Add the authenticated user to the jam session with additional data
-            $jamSession->participants()->attach($userId, [
-                'role_id' => $roleId,
-                'instrument_id' => $instrumentId <= 0 ? null : $instrumentId,
-                'skill_level_id' => $skillLevelId <= 0 ? null : $skillLevelId,
-                'message' => $message
-            ]);
 
-            // Check if the user is now a participant
-            $isParticipant = $jamSession->participants()
-                ->where('user_id', $userId)
-                ->exists();
+            $participant = new JamParticipant();
+            $participant->jam_session_id = $jamSession->id; // foreign key to associate with the jam session
+            $participant->user_id = $userId;
+            $participant->role_id = $roleId;
+            $participant->instrument_id = $instrumentId <= 0 ? null : $instrumentId;
+            $participant->skill_level_id = $skillLevelId <= 0 ? null : $skillLevelId;
+            $participant->message = $message;
 
-            if (!$isParticipant) {
+            if (!$participant->save()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Error joining the jam session',
@@ -327,8 +329,10 @@ class JamSessionController extends Controller
                 ], 500);
             }
 
-            // Return a 204 No Content response on success
-            return response()->json(null, 204);
+            return response()->json([
+                'success' => true,
+                'message' => "You are now a participant of the jam.",
+            ], 204);
 
         } catch (\Exception $e) {
             if ($e instanceof QueryException) {
